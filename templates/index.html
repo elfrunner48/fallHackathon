@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interactive Map of Memphis</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        #map { height: 400px; margin-bottom: 15px; }
+        .form-container { width: 400px; margin: auto; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Select Location and Enter Date & Time</h2>
+        
+        <!-- Map section for location selection -->
+        <label for="location">Request Desired Location and Time fro New Bus Stop:</label>
+        <div id="map"></div>
+        <input type="hidden" id="latitude" name="latitude">
+        <input type="hidden" id="longitude" name="longitude">
+        
+        <!-- Date and time input fields -->
+        <label for="week">Days of the week:</label><br>
+        <input type="checkbox" id="Su" name="week" value="Sunday"> Sunday
+        <input type="checkbox" id="M" name="week" value="Monday"> Monday
+        <input type="checkbox" id="T" name="week" value="Teusday"> Teusday
+        <input type="checkbox" id="W" name="week" value="Wednesday"> Wednesday
+        <input type="checkbox" id="R" name="week" value="Thursday"> Thursday
+        <input type="checkbox" id="F" name="week" value="Friday"> Friday
+        <input type="checkbox" id="Sa" name="week" value="Saturday"> Saturday
+        <br><br>
+        
+        <label for="time">Time:</label>
+        <input type="time" id="time" name="time" required><br><br>
+        
+        <!-- Submit button -->
+        <button id="submit-button" onclick="submitForm()">Submit</button>
+    </div>
+
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([35.1495, -90.0490], 13); // Memphis coordinates
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18
+        }).addTo(map);
+
+        let marker; // Variable to store the current marker
+
+        // Click event to capture location and update hidden inputs
+        map.on('click', function(e) {
+            const { lat, lng } = e.latlng;
+            console.log(`Location selected: ${lat}, ${lng}`);
+            
+            // Update hidden input fields with the latest coordinates
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+
+            // Remove previous marker if it exists
+            if (marker) {
+                map.removeLayer(marker);
+            }
+
+            // Add a new marker at the clicked location
+            marker = L.marker([lat, lng]).addTo(map);
+        });
+
+        // Function to submit form data
+        function submitForm() {
+            const latitude = document.getElementById('latitude').value;
+            const longitude = document.getElementById('longitude').value;
+            const time = document.getElementById('time').value;
+            const days = Array.from(document.querySelectorAll('input[name="week"]:checked')).map(checkbox => checkbox.value);
+
+            //Check for input
+            if (!latitude || !longitude) {
+                alert("Please select a location on the map.");
+                return;
+            }
+
+            if (!time) {
+                alert("Please select a time");
+                return;
+            }
+
+            if (days.length === 0) {
+                alert("Please select at least one day.");
+                return;
+            }
+
+            // Send form data to the backend
+            fetch('/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    latitude: latitude,
+                    longitude: longitude,
+                    days: days,
+                    time: time
+                })
+            }).then(response => response.json())
+              .then(data => console.log('Data saved:', data))
+              .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
