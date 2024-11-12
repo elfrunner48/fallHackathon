@@ -20,7 +20,7 @@ def get_data():
         id = random.randint(100,150)
         if id not in ids:
             ids.append(id)
-    print(ids)
+   
 
     # Get random times
     times = list()
@@ -43,7 +43,7 @@ def get_data():
         pt = random.randint(0,len(times)-1)
         data.append(times[pt])
         datas.append(data)
-    print(datas)
+
     return datas
         
 
